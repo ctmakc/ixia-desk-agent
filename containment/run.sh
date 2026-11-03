@@ -7,7 +7,7 @@ N=sbxchk-int; P=sbxchk-proxy; S=sbxchk-task
 cleanup(){ docker rm -f $P $S >/dev/null 2>&1; docker network rm $N >/dev/null 2>&1; }
 cleanup
 docker network create --internal $N >/dev/null
-docker run -d --name $P --network bridge -e ALLOW=example.com -v "$PWD/egress-proxy.js:/p.js:ro" node:20-alpine node /p.js >/dev/null
+docker run -d --name $P --network bridge -e ALLOW=example.com -v "$PWD/../proxy/egress-proxy.js:/p.js:ro" node:20-alpine node /p.js >/dev/null
 docker network connect $N $P
 sleep 2
 echo "== 1. allowed host through proxy"
