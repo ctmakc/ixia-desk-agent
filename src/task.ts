@@ -18,7 +18,7 @@ export interface Run {
   id: string; created: number; status: 'guard' | 'held' | 'blocked' | 'running' | 'awaiting_approval' | 'booked' | 'rejected' | 'stopped' | 'error' | 'contained';
   redTeam: boolean; enquiry: { name?: string; email?: string; phone?: string; message: string };
   triage?: Pick<TriageResult, 'decision' | 'checks' | 'draft' | 'trace'>;
-  events: AgentEvent[]; approval?: { summary: string; shot: string | null; decided?: boolean; approved?: boolean; by?: string };
+  events: AgentEvent[]; approval?: { summary: string; shot: string | null; kind?: 'release' | 'book'; decided?: boolean; approved?: boolean; by?: string };
   sandbox?: { name: string; removed?: boolean; lifetimeMs?: number; killedByTimer?: boolean };
   proxyDenied: string[]; portalBefore?: any; portalAfter?: any; finished?: number; tokens?: { calls: number; inTok: number; outTok: number };
 }
@@ -83,7 +83,16 @@ export function startRun(cfg: Config, enquiry: Run['enquiry'], redTeam: boolean,
       emit({ t: Date.now(), kind: 'info', msg: `Guardrails: ${tr.decision}` });
       audit(cfg, r, 'triaged', 'ixia-guard', tr.decision);
       if (tr.decision === 'block' && !redTeam) { set('blocked'); return; }
-      if (tr.decision === 'hold_for_review' && !redTeam) { set('held'); emit({ t: Date.now(), kind: 'info', msg: 'Held for a person in the review queue; the agent does not run on held enquiries.' }); return; }
+      if (tr.decision === 'hold_for_review' && !redTeam) {
+        emit({ t: Date.now(), kind: 'info', msg: 'Held for a person: ' + tr.checks.filter((c) => c.status === 'review').map((c) => c.label).join('; ') + '. The agent waits until staff release it.' });
+        const released = await new Promise<boolean>((ok) => {
+          r.approval = { summary: `Release held enquiry from ${enquiry.name || 'unknown'} to the desk agent?`, shot: null, kind: 'release' }; set('held');
+          approvals.set(r.id, (x) => { audit(cfg, r, x ? 'released' : 'kept_held', r.approval?.by || 'staff', x ? 'release' : 'hold'); ok(x); });
+          setTimeout(() => { if (approvals.has(r.id)) { approvals.delete(r.id); ok(false); } }, 30 * 60_000);
+        });
+        if (!released) { emit({ t: Date.now(), kind: 'info', msg: 'Kept in the review queue; the agent did not run.' }); set('held'); return; }
+        r.approval = undefined; emit({ t: Date.now(), kind: 'approval', ok: true, msg: 'Staff released the enquiry to the agent.' });
+      }
       if (redTeam) emit({ t: Date.now(), kind: 'info', msg: 'Red-team mode: Guardrails decision ignored and the raw enquiry goes to the planner, to test the sandbox boundary.' });
 
       // 2. Task token (one contact, one booking, 10 min) and portal snapshot
@@ -105,7 +114,7 @@ export function startRun(cfg: Config, enquiry: Run['enquiry'], redTeam: boolean,
       const res = await runAgent(sbx, `${cfg.portalOrigin}/login?t=${encodeURIComponent(token)}`, facts, {
         chat: v.chat, plannerModel: cfg.plannerModel, visionModel: cfg.visionModel, portalOrigin: cfg.portalOrigin, emit, redTeam, rawEnquiry: enquiry.message,
         approve: (summary, shot) => new Promise<boolean>((ok) => {
-          r.approval = { summary, shot }; set('awaiting_approval');
+          r.approval = { summary, shot, kind: 'book' }; set('awaiting_approval');
           approvals.set(r.id, (x) => { set('running'); audit(cfg, r, x ? 'approved' : 'rejected', r.approval?.by || 'staff', x ? 'book' : 'no_booking'); ok(x); });
         }),
       });

@@ -220,8 +220,8 @@ function follow(id) {
   es = new EventSource(`/api/runs/${id}/events`); let n = 0;
   es.onmessage = (m) => {
     const d = JSON.parse(m.data);
-    if (d.type === 'snapshot') { setStatus(d.run.status); d.run.events.forEach((e) => addEvent(e, n++)); if (d.run.sandbox) $('cname').textContent = d.run.sandbox.name; if (d.run.finished) finish(); }
-    if (d.type === 'status') { setStatus(d.status); if (d.status === 'awaiting_approval') ask(); if (d.status === 'running' && !tick) startClock(); }
+    if (d.type === 'snapshot') { setStatus(d.run.status); if (['awaiting_approval','held'].includes(d.run.status)) ask(); d.run.events.forEach((e) => addEvent(e, n++)); if (d.run.sandbox) $('cname').textContent = d.run.sandbox.name; if (d.run.finished) finish(); }
+    if (d.type === 'status') { setStatus(d.status); if (d.status === 'awaiting_approval' || d.status === 'held') ask(); if (d.status === 'running' && !tick) startClock(); }
     if (d.type === 'event') { addEvent(d.event, n++); if (/^Guardrails:/.test(d.event.msg)) { const g = $('gd'); g.hidden = false; const v = d.event.msg.split(': ')[1]; g.textContent = 'guardrails: ' + v.replace(/_/g, ' '); g.className = 'pill ' + (v === 'auto_send' ? 'go' : v === 'block' ? 'block' : 'hold'); } const mm = d.event.msg.match(/^Sandbox (desk-sbx-\w+) started/); if (mm) $('cname').textContent = mm[1]; }
     if (d.type === 'finished') { finish(); es.close(); loadRuns(); }
   };
@@ -232,6 +232,10 @@ function startClock() {
 }
 async function ask() {
   const r = await fetch(`/api/runs/${cur}`).then((x) => x.json());
+  if (!r.approval || r.approval.decided) return;
+  const rel = r.approval.kind === 'release';
+  $('ap-h').innerHTML = rel ? '<b>Held by Guardrails.</b> Release this enquiry to the agent?' : '<b>Approval needed.</b> The agent stopped before the final click.';
+  $('ap-yes').textContent = rel ? 'Release to agent' : 'Approve booking'; $('ap-no').textContent = rel ? 'Keep held' : 'Reject';
   $('ap-sum').textContent = r.approval?.summary || '';
   if (r.approval?.shot) showShot(`/api/runs/${cur}/shot/approval?${Date.now()}`);
   $('approval').className = 'approval show'; $('ap-yes').focus();
