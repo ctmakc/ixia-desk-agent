@@ -109,15 +109,15 @@ export async function triage(llm: ModelClient, ws: Workspace, enquiry: Enquiry,
     // Llama Guard
     const g = String(guardOut).trim().toLowerCase();
     if (g.startsWith('error')) {
-      checks.push({ id: 'safety_model', label: 'Llama Guard 3 safety classification', source: 'llama-guard', status: 'review', detail: 'Safety model unavailable; held for a human.' });
+      checks.push({ id: 'safety_model', label: 'Safety model (Nemotron 3.5 Content Safety on Vultr)', source: 'llama-guard', status: 'review', detail: 'Safety model unavailable; held for a human.' });
     } else if (g.includes('unsafe')) {
       const cats = (String(guardOut).match(/S\d{1,2}/g) || []);
       const blocking = cats.filter((c) => !REVIEW_CATEGORIES.has(c));
-      checks.push({ id: 'safety_model', label: 'Llama Guard 3 safety classification', source: 'llama-guard',
+      checks.push({ id: 'safety_model', label: 'Safety model (Nemotron 3.5 Content Safety on Vultr)', source: 'llama-guard',
         status: blocking.length ? 'block' : 'review',
         detail: `Unsafe: ${cats.map((c) => `${c} ${GUARD_CATEGORIES[c] || ''}`.trim()).join(', ') || 'unspecified'}.` });
     } else {
-      checks.push({ id: 'safety_model', label: 'Llama Guard 3 safety classification', source: 'llama-guard', status: 'pass', detail: 'Safe.' });
+      checks.push({ id: 'safety_model', label: 'Safety model (Nemotron 3.5 Content Safety on Vultr)', source: 'llama-guard', status: 'pass', detail: 'Safe.' });
     }
 
     // Verifier

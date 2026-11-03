@@ -42,12 +42,19 @@ export function vultrClient(key: string, base = VULTR_BASE) {
     }
   };
 
+  // Several catalogue models reason before answering; the reasoning counts against max_tokens and can
+  // leave the answer empty. Ask for no reasoning, keep headroom, and retry once with a larger budget.
   async function chat(model: string, messages: ChatMsg[], opts: { maxTokens?: number; json?: boolean; temperature?: number } = {}) {
-    const r = await post('/chat/completions', {
-      model, messages, max_tokens: opts.maxTokens ?? 800, temperature: opts.temperature ?? 0.2,
-      ...(opts.json ? { response_format: { type: 'json_object' } } : {}),
-    });
-    return stripThinking(textOf(r));
+    const want = opts.maxTokens ?? 800;
+    for (const budget of [want + 512, want + 3072]) {
+      const r = await post('/chat/completions', {
+        model, messages, max_tokens: budget, temperature: opts.temperature ?? 0.2, reasoning_effort: 'none',
+        ...(opts.json ? { response_format: { type: 'json_object' } } : {}),
+      });
+      const out = stripThinking(textOf(r));
+      if (out || r?.choices?.[0]?.finish_reason !== 'length') return out;
+    }
+    return '';
   }
 
   const guardClient: ModelClient = {
