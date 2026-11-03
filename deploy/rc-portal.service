@@ -1,0 +1,20 @@
+[Unit]
+Description=Demo practice-management portal (fictional firm)
+After=network-online.target
+
+[Service]
+User=rcportal
+WorkingDirectory=/var/lib/rc-portal
+EnvironmentFile=/etc/rc-portal/portal.env
+Environment=PORTAL_DATA=/var/lib/rc-portal/portal-data.json
+ExecStart=/usr/bin/node /opt/ixia-desk/portal/server.mjs
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/rc-portal
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

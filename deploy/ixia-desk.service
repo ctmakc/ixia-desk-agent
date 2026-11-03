@@ -1,0 +1,15 @@
+[Unit]
+Description=IXIA Desk Agent controller
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+WorkingDirectory=/opt/ixia-desk
+EnvironmentFile=/etc/ixia-desk/desk.env
+Environment=DESK_DATA=/var/lib/ixia-desk
+ExecStart=/usr/bin/npx tsx src/server.ts
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

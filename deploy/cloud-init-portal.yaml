@@ -1,0 +1,16 @@
+#cloud-config
+# Portal VM: the fictional firm's practice-management portal. Node 20 + Caddy.
+package_update: true
+packages: [ca-certificates, curl, git, debian-keyring, debian-archive-keyring, apt-transport-https, ufw]
+runcmd:
+  - curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs
+  - curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+  - curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' > /etc/apt/sources.list.d/caddy-stable.list
+  - apt-get update && apt-get install -y caddy
+  - git clone https://github.com/ctmakc/ixia-desk-agent /opt/ixia-desk
+  - useradd --system --home /var/lib/rc-portal --create-home rcportal
+  - mkdir -p /etc/rc-portal && chmod 700 /etc/rc-portal
+  - cp /opt/ixia-desk/deploy/rc-portal.service /etc/systemd/system/ && systemctl daemon-reload
+  - printf 'portal-demo.ixia.online {\n  reverse_proxy 127.0.0.1:8090\n}\n' > /etc/caddy/Caddyfile && systemctl reload caddy
+  - ufw allow 22/tcp && ufw allow 80/tcp && ufw allow 443/tcp && ufw --force enable
+  - touch /var/lib/rc-portal/cloud-init-done

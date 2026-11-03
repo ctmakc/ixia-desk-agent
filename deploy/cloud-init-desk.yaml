@@ -1,0 +1,18 @@
+#cloud-config
+# Desk VM (Vultr Cloud Compute, Ubuntu 24.04): Docker, Node 20, Caddy, IXIA Desk controller.
+# Secrets are NOT here: /etc/ixia-desk/desk.env is copied over SSH after boot.
+package_update: true
+packages: [ca-certificates, curl, git, debian-keyring, debian-archive-keyring, apt-transport-https, ufw]
+runcmd:
+  - curl -fsSL https://get.docker.com | sh
+  - curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs
+  - curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+  - curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' > /etc/apt/sources.list.d/caddy-stable.list
+  - apt-get update && apt-get install -y caddy
+  - git clone https://github.com/ctmakc/ixia-desk-agent /opt/ixia-desk
+  - cd /opt/ixia-desk && npm ci --no-audit --no-fund
+  - mkdir -p /etc/ixia-desk /var/lib/ixia-desk && chmod 700 /etc/ixia-desk
+  - cp /opt/ixia-desk/deploy/ixia-desk.service /etc/systemd/system/ && systemctl daemon-reload
+  - printf 'desk.ixia.online {\n  reverse_proxy 127.0.0.1:8080 {\n    flush_interval -1\n  }\n}\n' > /etc/caddy/Caddyfile && systemctl reload caddy
+  - ufw allow 22/tcp && ufw allow 80/tcp && ufw allow 443/tcp && ufw --force enable
+  - touch /var/lib/ixia-desk/cloud-init-done
