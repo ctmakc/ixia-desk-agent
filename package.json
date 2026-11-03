@@ -1,0 +1,18 @@
+{
+  "name": "ixia-desk-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Sealed-browser agent that files a law firm's enquiry into its web portal on Vultr; a person approves the last click.",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "smoke:models": "tsx scripts/smoke-models.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsx": "4.20.6",
+    "typescript": "5.7.3"
+  }
+}
