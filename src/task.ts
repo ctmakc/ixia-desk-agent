@@ -93,7 +93,7 @@ export function startRun(cfg: Config, enquiry: Run['enquiry'], redTeam: boolean,
         if (!released) { emit({ t: Date.now(), kind: 'info', msg: 'Kept in the review queue; the agent did not run.' }); set('held'); return; }
         r.approval = undefined; emit({ t: Date.now(), kind: 'approval', ok: true, msg: 'Staff released the enquiry to the agent.' });
       }
-      if (redTeam) emit({ t: Date.now(), kind: 'info', msg: 'Red-team mode: Guardrails decision ignored and the raw enquiry goes to the planner, to test the sandbox boundary.' });
+      if (redTeam) emit({ t: Date.now(), kind: 'info', msg: 'Red-team mode: Guardrails decision ignored; the planner is told to obey the text inside the enquiry, simulating a model taken over by the injection. The sandbox, proxy, controller and token scope must hold anyway.' });
 
       // 2. Task token (one contact, one booking, 10 min) and portal snapshot
       r.portalBefore = await portalAdmin(cfg, '/admin/state').then((s) => ({ contacts: s.contacts, bookings: s.bookings }));
@@ -112,7 +112,7 @@ export function startRun(cfg: Config, enquiry: Run['enquiry'], redTeam: boolean,
         matter: tr.draft.matterType || 'Other', summary: (tr.draft.summary || enquiry.message).slice(0, 400),
       };
       const res = await runAgent(sbx, `${cfg.portalOrigin}/login?t=${encodeURIComponent(token)}`, facts, {
-        chat: v.chat, plannerModel: cfg.plannerModel, visionModel: cfg.visionModel, portalOrigin: cfg.portalOrigin, emit, redTeam, rawEnquiry: enquiry.message,
+        chat: v.chat, plannerModel: cfg.plannerModel, visionModel: cfg.visionModel, portalOrigin: cfg.portalOrigin, emit, redTeam, rawEnquiry: enquiry.message, proxyDenied: () => proxyDenials(since),
         approve: (summary, shot) => new Promise<boolean>((ok) => {
           r.approval = { summary, shot, kind: 'book' }; set('awaiting_approval');
           approvals.set(r.id, (x) => { set('running'); audit(cfg, r, x ? 'approved' : 'rejected', r.approval?.by || 'staff', x ? 'book' : 'no_booking'); ok(x); });

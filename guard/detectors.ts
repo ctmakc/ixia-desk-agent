@@ -34,8 +34,19 @@ export function specialCategories(text: string): string[] {
 // treated as hostile input and the draft is held.
 const INJECTION = ure(/(ignore (all |any )?(the )?(previous|prior|above) (instructions|prompts?)|disregard (your|the) (rules|instructions)|you are now|system prompt|act as (an?|the) |reveal (your|the) (prompt|instructions)|negeer (alle )?(vorige|eerdere) instructies|ignoriere (alle )?(vorherigen|bisherigen) anweisungen|ignore[sz]? (les|toutes les) instructions|ignora (las|todas las) instrucciones|ігноруй (попередні|всі) інструкції|<\/?(system|assistant)>|\[\/?INST\])/i);
 
+// Second family: text dressed up as a note, memo or new orders for the assistant,
+// e.g. "[SYSTEM NOTE FOR THE ASSISTANT: ...]", "P.S. to the AI: ...", "New instructions from IT".
+// Plain enquiries talk about the client's matter; they do not address the model.
+const ADDRESSED = ure(/(\[\s*(system|admin|developer|assistant|ai|internal)\b[^\]]{0,40}(note|message|instruction|override|prompt)|\b(note|message|instructions?|memo|p\.?\s?s\.?)\s+(for|to)\s+(the\s+)?(assistant|ai|a\.i\.|bot|model|agent|llm|chatbot)\b|\bnew instructions\b|\b(updated|override|overriding) instructions\b|^\s*(assistant|system|ai)\s*:|[.!?]\s+(assistant|system|ai)\s*:|\bnote pour l'assistant\b|\bнов[іi] інструкції\b|\bновые инструкции\b)/im);
+
+// Third family: the enquiry orders a browser-type action on an address. A client
+// may paste a link to their own site; telling the reader to open, navigate to or
+// send something to a host (or to an internal address) is an instruction.
+const ORDERS_URL = ure(/(^|[.!?:;,\]]\s*|\b(please|then|and|first|also|now|immediately)\s+)(open|navigate to|go to|visit|browse to|send|upload|post|paste|copy)\b[^.\n]{0,80}(https?:\/\/|\b(localhost|169\.254\.169\.254|10\.\d+\.\d+\.\d+|127\.0\.0\.1|192\.168\.\d+\.\d+)\b)/i);
+
 export function promptInjection(text: string): boolean {
-  return INJECTION.test(text || '');
+  const t = text || '';
+  return INJECTION.test(t) || ADDRESSED.test(t) || ORDERS_URL.test(t);
 }
 
 // Outcome promises in the drafted reply (deterministic net under the verifier).
