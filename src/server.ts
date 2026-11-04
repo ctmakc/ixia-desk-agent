@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { startRun, getRun, listRuns, subscribe, decide, type Config } from './task';
+import { startRun, getRun, listRuns, subscribe, decide, loadRuns, shotPath, type Config } from './task';
 import { usage } from './vultr';
 import { verifyChain } from '../guard/audit';
 
@@ -19,6 +19,7 @@ const cfg: Config = {
   guardModels: { draft: env('GUARD_DRAFT_MODEL'), verifier: env('GUARD_VERIFIER_MODEL'), safety: env('GUARD_SAFETY_MODEL'), embed: env('GUARD_EMBED_MODEL') },
 };
 fs.mkdirSync(cfg.dataDir, { recursive: true });
+const restored = loadRuns(cfg.dataDir); if (restored) console.log(`restored ${restored} finished runs`);
 const PORT = +env('PORT', '8080');
 const STAFF_KEY = env('DESK_STAFF_KEY', '');           // approve/reject from the review queue
 const DAILY_LIMIT = +env('DEMO_DAILY_RUNS', '150');
@@ -69,6 +70,7 @@ const server = http.createServer(async (req, res) => {
     if (m) {
       const r = getRun(m[1]); const shot = m[2] === 'approval' ? r?.approval?.shot : r?.events[+m[2]]?.shot;
       if (!shot) return json(res, 404, { error: 'no screenshot' });
+      if (shot === 'disk') { const f = shotPath(cfg.dataDir, m[1], m[2]); if (!fs.existsSync(f)) return json(res, 404, { error: 'no screenshot' }); res.writeHead(200, { 'content-type': 'image/jpeg', 'cache-control': 'max-age=86400' }); return res.end(fs.readFileSync(f)); }
       res.writeHead(200, { 'content-type': 'image/jpeg', 'cache-control': 'max-age=3600' }); return res.end(Buffer.from(shot, 'base64'));
     }
     m = p.match(/^\/api\/runs\/(\w+)\/events$/);

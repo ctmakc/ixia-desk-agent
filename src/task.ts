@@ -29,6 +29,16 @@ const approvals = new Map<string, (ok: boolean) => void>();
 let lastAudit: AuditRecord | null = null;
 
 export const getRun = (id: string) => runs.get(id);
+// Screenshots of finished runs live on disk; in memory they are replaced by the marker 'disk'.
+export const shotPath = (dataDir: string, id: string, n: string) => path.join(dataDir, 'shots', id.replace(/\W/g, ''), `${n.replace(/\W/g, '')}.jpg`);
+// Finished runs survive a restart, so a run link stays valid as evidence.
+export function loadRuns(dataDir: string, keep = 300) {
+  const f = path.join(dataDir, 'runs.jsonl');
+  if (!fs.existsSync(f)) return 0;
+  const lines = fs.readFileSync(f, 'utf8').trim().split('\n').filter(Boolean).slice(-keep);
+  for (const l of lines) { try { const r = JSON.parse(l); if (r.id && !runs.has(r.id)) runs.set(r.id, r); } catch {} }
+  return lines.length;
+}
 export const listRuns = () => [...runs.values()].sort((a, b) => b.created - a.created);
 export function subscribe(id: string, fn: (e: any) => void) { let s = listeners.get(id); if (!s) listeners.set(id, (s = new Set())); s.add(fn); return () => s!.delete(fn); }
 const publish = (r: Run, e: any) => { for (const fn of listeners.get(r.id) || []) fn(e); };
@@ -133,7 +143,12 @@ export function startRun(cfg: Config, enquiry: Run['enquiry'], redTeam: boolean,
       r.tokens = { calls: usage.calls - u0.calls, inTok: usage.inTok - u0.inTok, outTok: usage.outTok - u0.outTok };
       r.finished = Date.now();
       audit(cfg, r, 'run_finished', 'desk-controller', r.status);
-      fs.appendFileSync(path.join(cfg.dataDir, 'runs.jsonl'), JSON.stringify({ ...r, events: r.events.map(({ shot, ...e }) => e), approval: r.approval ? { ...r.approval, shot: undefined } : undefined }) + '\n');
+      try {
+        const dir = path.dirname(shotPath(cfg.dataDir, r.id, '0')); fs.mkdirSync(dir, { recursive: true });
+        r.events.forEach((e, i) => { if (e.shot && e.shot !== 'disk') { fs.writeFileSync(shotPath(cfg.dataDir, r.id, String(i)), Buffer.from(e.shot, 'base64')); e.shot = 'disk'; } });
+        if (r.approval?.shot && r.approval.shot !== 'disk') { fs.writeFileSync(shotPath(cfg.dataDir, r.id, 'approval'), Buffer.from(r.approval.shot, 'base64')); r.approval.shot = 'disk'; }
+      } catch (e) { emit({ t: Date.now(), kind: 'error', msg: 'could not store screenshots: ' + String(e).slice(0, 120) }); }
+      fs.appendFileSync(path.join(cfg.dataDir, 'runs.jsonl'), JSON.stringify(r) + '\n');
       publish(r, { type: 'finished', run: { ...r, events: undefined } });
     }
   })();
