@@ -132,7 +132,7 @@ footer{max-width:1480px;margin:0 auto;padding:0 32px 32px;color:var(--subtle);fo
         <div class="row2"><div><label for="name">Name</label><input id="name" maxlength="120"></div><div><label for="phone">Phone</label><input id="phone" maxlength="40"></div></div>
         <label for="email">Email</label><input id="email" type="email" maxlength="160">
         <label for="message">Message</label><textarea id="message" maxlength="3000" required></textarea>
-        <label class="rt" id="rtbox"><input type="checkbox" id="redteam"><span><b>Red-team mode.</b> Skips the Guardrails hold and tells the planner to obey the text, as if the injection had taken it over. Watch the proxy, the controller and the task token stop it. Demo only.</span></label>
+        <label class="rt" id="rtbox"><input type="checkbox" id="redteam"><span><b>Red-team mode.</b> Skips the Guardrails hold and runs every order hidden in the text inside the sandbox, as if the model had obeyed it. Watch the proxy, the controller and the task token stop each one. Demo only.</span></label>
         <button class="btn" id="go" type="submit">Run agent</button>
         <div class="err" id="err" role="alert"></div>
       </form>

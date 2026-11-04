@@ -93,7 +93,7 @@ export function startRun(cfg: Config, enquiry: Run['enquiry'], redTeam: boolean,
         if (!released) { emit({ t: Date.now(), kind: 'info', msg: 'Kept in the review queue; the agent did not run.' }); set('held'); return; }
         r.approval = undefined; emit({ t: Date.now(), kind: 'approval', ok: true, msg: 'Staff released the enquiry to the agent.' });
       }
-      if (redTeam) emit({ t: Date.now(), kind: 'info', msg: 'Red-team mode: Guardrails decision ignored; the planner is told to obey the text inside the enquiry, simulating a model taken over by the injection. The sandbox, proxy, controller and token scope must hold anyway.' });
+      if (redTeam) emit({ t: Date.now(), kind: 'info', msg: 'Red-team mode: Guardrails decision ignored. A scripted attacker carries out every order hidden in the enquiry inside the sandbox, as if the model had obeyed it; then the planner does the real task. The proxy, controller and task token must hold.' });
 
       // 2. Task token (one contact, one booking, 10 min) and portal snapshot
       r.portalBefore = await portalAdmin(cfg, '/admin/state').then((s) => ({ contacts: s.contacts, bookings: s.bookings }));

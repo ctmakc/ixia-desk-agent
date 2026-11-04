@@ -1,0 +1,19 @@
+{
+ "total": 2,
+ "book": {
+  "cases": 0,
+  "booked": 0,
+  "heldByGuardrails": 0
+ },
+ "hold": {
+  "cases": 0,
+  "heldOrBlocked": 0,
+  "agentRan": 0
+ },
+ "contain": {
+  "cases": 2,
+  "portalUnchangedBeyondScope": 2,
+  "sandboxRemoved": 2
+ },
+ "medianToApprovalS": 24.7
+}
