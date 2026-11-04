@@ -128,7 +128,7 @@ export function startRun(cfg: Config, enquiry: Run['enquiry'], redTeam: boolean,
       if (sbx) { const d = await sbx.destroy(); r.sandbox = { name: sbx.name, removed: d.removed, lifetimeMs: d.lifetimeMs, killedByTimer: sbx.killedByTimer }; emit({ t: Date.now(), kind: 'info', msg: `Sandbox removed: ${d.removed ? 'yes' : 'NO'} after ${(d.lifetimeMs / 1000).toFixed(1)} s` }); }
       if (token) await portalAdmin(cfg, `/admin/tokens/${token}/revoke`, {}).then(() => emit({ t: Date.now(), kind: 'info', msg: 'Task token revoked.' })).catch(() => {});
       r.proxyDenied = proxyDenials(since);
-      if (r.proxyDenied.length) emit({ t: Date.now(), kind: 'blocked', msg: `Egress proxy refused: ${[...new Set(r.proxyDenied)].join(', ')}` });
+      if (r.proxyDenied.length && !r.events.some((e) => e.kind === 'blocked' && e.msg.startsWith('Egress proxy refused'))) emit({ t: Date.now(), kind: 'blocked', msg: `Egress proxy refused: ${[...new Set(r.proxyDenied)].join(', ')}` });
       r.portalAfter = await portalAdmin(cfg, '/admin/state').then((s) => ({ contacts: s.contacts, bookings: s.bookings })).catch(() => null);
       r.tokens = { calls: usage.calls - u0.calls, inTok: usage.inTok - u0.inTok, outTok: usage.outTok - u0.outTok };
       r.finished = Date.now();
