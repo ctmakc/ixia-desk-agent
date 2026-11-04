@@ -59,6 +59,11 @@ bash containment/run.sh
 
 Results on the Vultr VM are recorded in `containment/RESULTS.md`.
 
+## Video and slides
+
+- `video/record.py` records the demo clips from the live desk with Playwright and logs when each event appeared; `video/cards.py` makes the evidence cards for the red-team scene from that run's own screenshots and the proxy log; `video/build.py` cuts the clips by those marks, adds the edge-tts voice and subtitles, and labels every sped-up or paused stretch.
+- `docs/slides/build.py` builds the deck and the cover; the numbers come from the newest full eval file.
+
 ## What existed before the event
 
 - **IXIA** — our AI lead-intake platform for service firms (ixia.online).

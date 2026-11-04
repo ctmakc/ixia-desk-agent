@@ -16,6 +16,7 @@ W, H = 1920, 1080
 REC_CSS = """
 html{zoom:.92}
 ol.tl{max-height:300px;overflow:auto;scroll-behavior:smooth}
+#message{min-height:250px}
 """
 WATCH_JS = """
 (() => {
@@ -43,8 +44,9 @@ def clip(name, fn):
     with sync_playwright() as p:
         b = p.chromium.launch()
         c = b.new_context(viewport={'width': W, 'height': H}, record_video_dir=str(OUT / 'rec' / name), record_video_size={'width': W, 'height': H})
-        pg = c.new_page()
+        pg = c.new_page(); v0 = time.time()   # the page's video starts with the page
         pg.goto(DESK + '/', wait_until='load'); pg.add_style_tag(content=REC_CSS); pg.evaluate(WATCH_JS)
+        offset = time.time() - v0             # marks are counted from here; add this to get video time
         pg.evaluate("window.__mark('page_ready')")
         info = fn(pg) or {}
         marks = pg.evaluate('window.__marks')
@@ -52,14 +54,14 @@ def clip(name, fn):
     d = OUT / 'rec' / name
     vids = [f for f in os.listdir(d) if f.endswith('.webm')]
     os.replace(d / vids[0], OUT / 'rec' / f'{name}.webm')
-    json.dump({'marks': marks, **info}, open(OUT / 'rec' / f'{name}.json', 'w'), indent=1, ensure_ascii=False)
+    json.dump({'offset': round(offset, 3), 'marks': marks, **info}, open(OUT / 'rec' / f'{name}.json', 'w'), indent=1, ensure_ascii=False)
     print('recorded', name, len(marks), 'marks', info)
 
 def run_sample(pg, n, show_text_ms=0):
     pg.click(f'#samples li:nth-child({n}) button'); pg.wait_for_timeout(700)
     if show_text_ms:
         pg.evaluate("window.__mark('text_shown')")
-        pg.locator('#message').scroll_into_view_if_needed(); pg.wait_for_timeout(show_text_ms)
+        pg.evaluate("document.getElementById('message').scrollTop = 0"); pg.wait_for_timeout(show_text_ms)
     pg.evaluate("window.__mark('click_run')"); pg.click('#go')
     pg.wait_for_selector('#approval.show', timeout=180_000); pg.wait_for_timeout(2200)
     pg.evaluate("window.__mark('click_approve')"); pg.click('#ap-yes')

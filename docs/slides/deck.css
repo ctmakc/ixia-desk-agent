@@ -30,3 +30,5 @@ h1{font-size:132px} h2{font-size:76px;margin-bottom:44px;max-width:1500px}
 .grid3>div{border-top:2px solid var(--ink);padding-top:24px}
 .grid3 .lbl{font:500 22px 'JetBrains Mono';text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-top:16px}
 .shot{position:absolute;right:96px;top:170px;width:1060px;height:800px;object-fit:cover;object-position:top;border-radius:14px;box-shadow:0 30px 80px rgba(12,15,22,.22);border:1px solid var(--line)}
+
+.rows.tight>div{padding:14px 0}

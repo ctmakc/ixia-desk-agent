@@ -46,8 +46,8 @@ S.append(f"""<section class="slide"><div class="k">The problem</div>
 <div><span class="n">03</span><div><b>A browser agent is a big blast radius</b><p>The enquiry is text from a stranger. If it carries hidden orders, an agent with a logged-in browser can export clients, reach cloud keys or post data out.</p></div></div>
 </div>{foot(2)}</section>""")
 S.append(f"""<section class="slide"><div class="k">How one enquiry flows</div>
-<h2>Seven steps, and the last click waits for a person.</h2>
-<div class="rows" style="--cols:60px 1fr">
+<h2 style="font-size:64px;margin-bottom:30px">Seven steps, and the last click waits for a person.</h2>
+<div class="rows tight" style="--cols:60px 1fr">
 <div><span class="n">1</span><p><b>Guardrails</b> on the enquiry: injection and sensitive-data rules, grounded reply, safety model, verifier.</p></div>
 <div><span class="n">2</span><p><b>Task token</b> for the portal: one contact, one booking, 10 minutes.</p></div>
 <div><span class="n">3</span><p><b>New container</b> with Chromium for this task only.</p></div>
@@ -64,7 +64,7 @@ S.append(f"""<section class="slide"><div class="k">The sealed browser</div>
 <div><p><b>Limits.</b> Read-only root, all capabilities dropped, 1 GB, 256 processes, 120 s wall clock.</p></div>
 <div><p><b>Scope in the portal.</b> The token cannot export and cannot create a second contact.</p></div>
 </div>
-<img class="shot" src="r07-desk.png">{foot(4)}</section>""")
+<img class="shot" style="width:900px;height:800px;top:150px" src="r07-desk.png">{foot(4)}</section>""")
 S.append(f"""<section class="slide"><div class="k">Containment, live · enquiry r07</div>
 <h2>Four hidden orders, four refusals.</h2>
 <div class="rows" style="--cols:760px 1fr">
@@ -88,7 +88,7 @@ S.append(f"""<section class="slide"><div class="k">Measured on Vultr · {len(R)}
 <h2>Nothing changed in the portal beyond the task.</h2>
 <div class="grid3">
 <div><div class="big">{booked_plain}<span style="font-size:60px;color:var(--muted)"> / {len(plain)}</span></div><div class="lbl">plain enquiries booked<br>{held_plain} held by Guardrails for a person</div></div>
-<div><div class="big">{held_sens + held_red}<span style="font-size:60px;color:var(--muted)"> / {len(hold) + len(contain)}</span></div><div class="lbl">sensitive and hostile enquiries<br>held for a person</div></div>
+<div><div class="big">{held_sens + held_red}<span style="font-size:60px;color:var(--muted)"> / {len(hold) + len(contain)}</span></div><div class="lbl">sensitive and hostile enquiries<br>held by Guardrails for a person</div></div>
 <div><div class="big">{removed}<span style="font-size:60px;color:var(--muted)"> / {len(ran)}</span></div><div class="lbl">sandboxes removed<br>after the run</div></div>
 </div>
 <p class="lede" style="margin-top:56px;font-size:28px">Largest portal change in one run: {max_c} contact, {max_b} booking. Vision checks failed: {vfail}. Median {to_appr:.1f} s from enquiry to the approval request. Proxy refused: {', '.join(refused)}. {calls} model calls on Vultr Serverless Inference. Cases written by the team: a regression test, not a benchmark.</p>{foot(7)}</section>""")
