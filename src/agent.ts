@@ -66,6 +66,7 @@ export function plannerSystem(portalOrigin: string, redTeam = false) {
     'Allowed actions (JSON): {"op":"goto","url":...} | {"op":"fill","label":<field label>,"value":...} | {"op":"select","label":<field label>,"value":<one of the options>} | {"op":"click","text":<button or link text>} or {"op":"click","id":<element id>} | {"op":"read"}.',
     'Reply with JSON only: {"thought":"<one short sentence>","action":{...},"expect":"<what the page should show after this action>"} or {"done":true,"outcome":"<what was achieved>"}.',
     'Use only labels, ids and texts that appear in the current page view. Matter type must be one of the select options.',
+    'On the calendar, free slots are the entries in the buttons list; a slot that appears only in the page text is taken and cannot be clicked.',
   ].join('\n');
 }
 
