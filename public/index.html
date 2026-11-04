@@ -100,7 +100,7 @@ ol.tl{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 ol.tl li{display:grid;grid-template-columns:62px 70px 1fr 64px;gap:10px;align-items:center;padding:7px 4px;border-bottom:1px solid var(--line);animation:slide .35s var(--ease-out)}
 @keyframes slide{from{transform:translateX(-10px);opacity:0}to{transform:none;opacity:1}}
 ol.tl .k{font:600 11px var(--f-mono);text-transform:uppercase;letter-spacing:.05em;color:var(--subtle)}
-ol.tl .k.blocked,ol.tl .k.error{color:var(--block)}ol.tl .k.approval{color:var(--hold)}ol.tl .k.done{color:var(--go)}
+ol.tl .k.k-blocked,ol.tl .k.k-error{color:var(--block)}ol.tl .k.k-approval{color:var(--hold)}ol.tl .k.k-done{color:var(--go)}
 ol.tl .t{font:12px var(--f-mono);color:var(--subtle)}
 ol.tl .m{word-break:break-word}
 ol.tl .m .bad{color:var(--block)}
@@ -195,7 +195,7 @@ function addEvent(e, i) {
   const li = document.createElement('li');
   li.innerHTML = `<span class="t"></span><span class="k"></span><span class="m"></span><span></span>`;
   li.querySelector('.t').textContent = time(e.t);
-  const k = li.querySelector('.k'); k.textContent = e.kind; k.classList.add(e.kind);
+  const k = li.querySelector('.k'); k.textContent = e.kind; k.classList.add('k-' + e.kind); // prefixed: .approval is also the approval card
   const m = li.querySelector('.m'); m.textContent = e.msg + (e.action && e.kind === 'plan' ? '  → ' + JSON.stringify(e.action) : '');
   if (e.ok === false) m.classList.add('bad');
   if (e.shot) { const img = new Image(); img.alt = 'screenshot after step'; img.src = `/api/runs/${cur}/shot/${i}`; img.onclick = () => window.open(img.src); li.lastElementChild.appendChild(img); showShot(img.src); }
@@ -206,7 +206,8 @@ function showShot(src) { const s = $('screen'); s.innerHTML = ''; const img = ne
 function knock(msg) {
   const d = $('denied'); if (d.firstElementChild?.tagName === 'SPAN') d.innerHTML = '';
   const hosts = msg.replace(/^.*?(refused navigation to |refused: )/, '').split(', ');
-  for (const h of hosts) { const x = document.createElement('div'); x.textContent = h; d.appendChild(x); }
+  const have = new Set([...d.children].map((c) => c.textContent));
+  for (const h of hosts) { if (have.has(h)) continue; have.add(h); const x = document.createElement('div'); x.textContent = h; d.appendChild(x); }
   const door = $('door'); door.classList.remove('flash'); void door.offsetWidth; door.classList.add('flash');
 }
 function reset(id) {
