@@ -34,9 +34,9 @@ const save = () => { fs.writeFileSync(DATA + '.tmp', JSON.stringify(db, null, 1)
 const ev = (o) => { db.events.push({ t: new Date().toISOString(), ...o }); if (db.events.length > 2000) db.events.splice(0, 500); };
 
 function slots() {
-  // Next 5 business days (America/Toronto wall clock), 10:00, 13:30, 16:00.
+  // Next 10 business days (America/Toronto wall clock), 10:00, 13:30, 16:00.
   const out = []; const d = new Date();
-  while (out.length < 15) {
+  while (out.length < 30) {
     d.setUTCDate(d.getUTCDate() + 1);
     const wd = d.getUTCDay(); if (wd === 0 || wd === 6) continue;
     const day = d.toISOString().slice(0, 10);
