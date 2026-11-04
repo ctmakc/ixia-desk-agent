@@ -18,21 +18,23 @@ Built for **Vultr: Agent Rush** (lablab.ai, 3–8 Nov 2026), Challenge 1 "Blast 
 
 ## Measured on Vultr
 
-One pass of the 31 enquiries in `eval/enquiries.json` (18 plain, 6 sensitive, 7 red-team, all fictional) against https://desk.ixia.online on 3 Nov 2026, agent code at commit `4a78fc5`. The runner (`eval/run.ts`) plays the staff member: it approves booking clicks and keeps held enquiries held. Raw rows: `eval/results/2026-11-04T00-36-56-458Z.json`.
+Two passes of the 31 enquiries in `eval/enquiries.json` (18 plain, 6 sensitive, 7 red-team, all fictional) against https://desk.ixia.online on 3 Nov 2026. The runner (`eval/run.ts`) plays the staff member: it approves booking clicks and keeps held enquiries held. The portal was reset before each pass. Raw rows: `eval/results/`.
 
-| | Result |
-|---|---|
-| Plain enquiries booked | 14 of 18; Guardrails held the other 4 for a person (3: the claim checker did not match a French or Ukrainian paraphrase to the knowledge base; 1: the enquiry mentions a minor) |
-| Sensitive enquiries | 6 of 6 held for a person; the agent did not run |
-| Red-team enquiries | 7 of 7 held by Guardrails; in red-team mode the agent ran anyway and every injected order was refused (table below) |
-| Prompt-injection detector | 7 of 7 red-team enquiries flagged, 0 of 24 others |
-| Runs where the agent ran | 21; booking completed in 21 |
-| Sandboxes removed after the run | 21 of 21 (none needed the 120 s kill) |
-| Vision checks failed | 0 |
-| Largest portal change in one run | 1 contact, 1 booking |
-| Hosts the egress proxy refused | 169.254.169.254, exfil.example.net, pastebin.example.org, localhost, 10.0.0.1 |
-| Time from enquiry to the approval request, median | 24.7 s |
-| Model calls on Vultr Serverless Inference | 431 in the 21 runs (median 21 per run), 367,090 input / 26,436 output tokens |
+| | Pass 2 (03:30 UTC 4 Nov, desk at `f0608e7`) | Pass 1 (00:36 UTC 4 Nov, desk at `4a78fc5`) |
+|---|---|---|
+| Plain enquiries booked | 13 of 18; 5 held by Guardrails for a person | 14 of 18; 4 held |
+| Sensitive enquiries held for a person | 6 of 6, agent did not run | 6 of 6 |
+| Red-team enquiries held by Guardrails | 7 of 7; in red-team mode every injected order was refused | 7 of 7; same |
+| Prompt-injection detector | 7 of 7 red-team flagged, 0 of 24 others | same |
+| Runs where the agent ran / booking completed | 20 / 20 | 21 / 21 |
+| Sandboxes removed after the run | 20 of 20 (none needed the 120 s kill) | 21 of 21 |
+| Vision checks failed | 0 | 0 |
+| Largest portal change in one run | 1 contact, 1 booking | 1 contact, 1 booking |
+| Hosts the egress proxy refused | 169.254.169.254, exfil.example.net, pastebin.example.org, localhost, 10.0.0.1 | same |
+| Enquiry to approval request, median | 14.4 s | 24.7 s |
+| Model calls on Vultr Serverless Inference (runs where the agent ran) | 380, median 20 per run; 309,799 input / 19,568 output tokens | 431; 367,090 / 26,436 |
+
+Between the passes the planner was told that free calendar slots are the buttons on the page; in pass 1 it sometimes clicked a slot that was already taken and waited out an 8-second timeout. The held plain enquiries come from Guardrails' claim checker, which is strict: it held replies that restate the firm's 15-minute reply promise in other words, or say in French that the firm handles wills. One enquiry mentions a newborn daughter and is held as data about a minor. Which plain enquiries get held varies between passes (pass 1: p02, p12, p15, p18; pass 2: p02, p06, p09, p12, p18).
 
 ## Red-team mode
 
